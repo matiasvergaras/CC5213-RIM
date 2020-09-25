@@ -7,7 +7,7 @@ class GT:
     def __init__(self, tipo, imagen_q, imagen_r):
         self.tipo = tipo
         self.imagen_q = imagen_q
-        self.imagen_r = imagen_r
+        self.imagen_r =  imagen_r
 
 
 class GroudTruth:

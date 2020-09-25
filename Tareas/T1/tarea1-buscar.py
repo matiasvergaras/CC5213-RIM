@@ -10,7 +10,7 @@ import numpy as np
 import scipy.spatial
 import utilsRIM as RIM
 
-
+ 
 #dist_vec_intensidad: string string -> np.array2D, np.array1D, np.array1D
 #recibe dos nombres de carpetas. Procesa las de la primera usando un vector de intensidad,
 #y carga los datos de la segunda (imagenes). Luego calcula la distancia de minkowski

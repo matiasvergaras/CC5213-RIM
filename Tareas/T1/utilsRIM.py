@@ -3,7 +3,7 @@
 #Modificaciones por Matias Vergara
 #Basado en el Material del curso Recuperacion de Informacion Multimedia de la Universidad de Chile
 
-import sys
+import sys 
 import os
 import numpy as np
 import cv2
