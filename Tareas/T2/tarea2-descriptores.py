@@ -23,7 +23,7 @@ if not os.path.isdir(videos_dir):
     sys.exit(1)
 
 # DEFINICIÓN DE PARÁMETROS PRINCIPALES
-segs = 0.3 # Tiempo entre cada frame a retener, en segundos
+segs = 0.3  # Tiempo entre cada frame a retener, en segundos
 tamaño = 60  # El tamaño con el cual se hará resize a cada frame
 
 # ABRIR DOCUMENTOS DESTINO
@@ -56,7 +56,6 @@ for videofile in os.listdir(videos_dir):
 
         # Si el frame corresponde a un multiplo de fps*segs, lo procesamos
         if frameID % multiplicador == 0:
-
             # Aplicamos Canny sobre el frame. Este sera el descriptor a usar.
             canny_frame = utils.canny_automatizado(frame, tamaño)
 
@@ -66,12 +65,12 @@ for videofile in os.listdir(videos_dir):
             info.write(videofile + "\t" + str(round(frameID / fps, 2)) + "\n")
 
             # Aumentar el recuento de frames de este video en 1
-            nframes+=1
+            nframes += 1
 
     # Si ya se leyo el video completo o hubo un error de lectura, liberar el video y guardar la cantidad
     # de frames leidos
     video.release()
-    numero_frames.write(videofile + str(nframes))
+    numero_frames.write(videofile + "\t" + str(nframes) + "\n")
 
 # Una vez que se procesaron todos los videos, se guardan los descriptores en un archivo binario.
 np_descriptores = np.array(descriptores)

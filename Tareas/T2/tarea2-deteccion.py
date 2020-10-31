@@ -31,7 +31,7 @@ if not os.path.isfile(similares_file):
 min_segs = 3
 
 # BUSCAR SIMILARES
-with open(detecciones_file, 'w') as detecciones:
+with open(detecciones_file+"_dup", 'w') as detecciones:
     with open(similares_file, 'r') as similares:
 
         # Leer archivo como objeto iterable, separando por saltos de linea
@@ -101,6 +101,37 @@ with open(detecciones_file, 'w') as detecciones:
                 tiempo_ultimo_frame = tiempo_inicio_comerc
                 nframes = 1
                 i+=1
+
+# Pasada final por el archivo de detecciones buscando eliminar duplicados
+with open(detecciones_file+"_dup", 'r') as detecciones_dup:
+    with open(detecciones_file, 'w') as detecciones_final:
+        cfza_min = 0.35 # confianza minima que se le exigirá a una detección para considerarse válida por sí sola
+        # Leer archivo como objeto iterable, separando por saltos de linea
+        iter_detecciones_dup = detecciones_dup.read().split('\n')
+        i=0
+        while i < len(iter_detecciones_dup)-2:
+            valores_act = iter_detecciones_dup[i].split('\t')
+            valores_sig = iter_detecciones_dup[i+1].split('\t')
+
+            # Si la deteccion actual y la siguiente corresponden al mismo comercial, y ambas tienen un bajo nivel de
+            # confianza, las unimos en la misma detección, sumando sus confianzas.
+            if valores_act[0]==valores_sig[0] and valores_act[3]==valores_sig[3] and float(valores_act[4])<=cfza_min:
+                suma_tiempos = str(float(valores_act[2]) + float(valores_sig[2]))
+                suma_confianzas = str(float(valores_act[4]) + float(valores_sig[4]))
+                detecciones_final.write(valores_act[0] + '\t' + valores_act[1] + '\t' + suma_tiempos + \
+                                        '\t' + valores_act[3] + '\t' + suma_confianzas + '\n')
+                i+=1
+            # Si la deteccion actual tiene suficiente confianza por si sola o no se puede reunir con la siguiente,
+            # la mantenemos.
+            else:
+                detecciones_final.write(iter_detecciones_dup[i] + '\n')
+            i+=1
+
+        # Caso borde: la última linea no se unió a la penúltima (y ya que no es evaluada en el while, la evaluamos aparte).
+        if i<len(iter_detecciones_dup)-1:
+            ultima_linea = iter_detecciones_dup[i].split('\t')
+            if float(ultima_linea[4]) > cfza_min:
+                detecciones_final.write(iter_detecciones_dup[i])
 
 # Imprimir en terminal el tiempo de ejecución
 print("--- Tiempo de ejecución: %s segundos ---" % (time.time() - tiempo_inicial))

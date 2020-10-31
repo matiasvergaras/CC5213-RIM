@@ -84,7 +84,7 @@ para el módulo siguiente.
     realizando el siguiente proceso:
 
         - Tomar un frame del video
-        - Redimensionar el frame a 60x60 pixeles
+        - Redimensionar el frame a 'tamaño'x'tamaño' pixeles
         - Aplicar el descriptor de bordes Canny  al frame, con parámetros low_treshold y high_treshold adaptativos a
           las intensidades del frame
         - Guardar el descriptor en un arreglo
@@ -96,10 +96,14 @@ para el módulo siguiente.
     Una vez que se procesan todos los videos, se guarda el arreglo de descriptores como un archivo binario mediante
     numpy.save().
 
-    Cabe destacar que en este script se definen, en las lineas 26 y 27, dos de los parámetros mas determinantes en el
+    Cabe destacar que en este script se definen, en las lineas 26 y 27, dos de los parámetros más determinantes en el
     comportamiento del programa: 'segs', el tiempo de muestreo, y 'tamaño', el tamaño de redimensionamiento. Cambiar
     dichos valores puede tener efectos considerablemente adversos - o positivos - en el programa, sin embargo, se
     recomienda mantener los entregados (pues se obtuvieron tras un gran número de pruebas y errores).
+
+    Si bien el redimensionamiento genera una imágen cuadrada (con mismo largo y ancho), es posible obtener una imágen
+    en 16:9 agregando el parámetro 'relacion=True' en el llamado a canny_automatizado. Se recomienda, sin embargo,
+    mantener la relación de aspecto 1:1 (cuadrada), pues entrega mejores resultados con la configuración por defecto.
 
     4.2. tarea2-busqueda.py
 
@@ -115,8 +119,12 @@ para el módulo siguiente.
           momento, entonces actualizar dicha distancia con este valor inferior, y continuar iterando.
 
         - Una vez que se terminan de recorrer todos los descriptores de comerciales, escribir en el archivo objetivo
-          una linea con el nombre y el tiempo de los frames apareados (tanto de televisión como de comercial) y
-          la distancia entre ellos (que es la mínima).
+          una linea con el origen de cada frame y el instante al que pertenecen en el video original (tanto de televisión
+          como de comercial) y la distancia entre ellos (que es la mínima), separando por tabulaciones cada valor. Esto
+          entrega como resultado columnas con el siguiente formato:
+
+                capitulo_de_tv tiempo_en_capitulo_de_tv    comercial  tiempo_en_comercial  distancia
+
 
     4.3. tarea2-deteccion.py
 
@@ -144,10 +152,20 @@ para el módulo siguiente.
     en la práctica esto amplia considerablemente las detecciones (de 5 a 24 para el dataset a). Sin embargo, la
     condición debe cumplirse como desigualdad estricta entre los frames inicial y final de cada comercial.
 
-    Cabe destacar que al inicio de este script, en la línea 31, se define un parámetro determinante en los resultados:
-    'min_segs', el largo mínimo exigido a los comerciales. Por defecto se configura a 3, y se recomienda mantener esta
-     configuración.
+    Para cada detección se genera un valor de 'confianza', definido como el número de frames del comercial encontrados
+    divididos en el número total de frames procesados para dicho comercial al momento de crear los descriptores.
 
+    A medida que se detectan candidatos a apariciones de comerciales, el programa escribe un archivo con resultados
+    preliminares, en donde se encuentran todos los pares identificados pero con una cantidad de duplicados potencialmente
+    grande. Luego se realiza un procesamiento final sobre este archivo, reuniendo los duplicados contiguos en una misma
+    detección (bajo la condición de que al menos uno de ellos presente un nivel de confianza menor a un mínimo
+    determinado) y escribiéndolos en el archivo de resultados final (en la ruta entregada como parámetro).
+
+    Los resultados finales se presentan en el siguiente formato:
+
+               capitulo_de_tv  comercial_emparejado tiempo_de_inicio_en_tv duracion    confianza
+
+    Donde las columnas se separan por tabulaciones.
 
 5. ANÁLISIS DE RESULTADOS Y POSIBLES MEJORAS
 
@@ -155,22 +173,31 @@ para el módulo siguiente.
 
     Se obtienen los siguientes resultados para cada dataset:
 
-    Indicador                   |         dataset_a          |         dataset_b           |       dataset_c
+    Indicador                   |       dataset_a       |        dataset_b      |    dataset_c   |     Promedio
     ------------------------------------------------------------------------------------------------------------------
-    detecciones totales         |           18/24            |           51/48             |    29/31
+    detecciones totales         |         14/24         |         40/40        |       20/31     |      64,52%
     ------------------------------------------------------------------------------------------------------------------
-    detecciones correctas       |     15/24 (+3 duplicados)  |     36/48 (+14 duplicados)  |    20/31 (+9 duplicados)
+    detecciones correctas       |         14/14         |         36/40        |       19/20     |       95%
     ------------------------------------------------------------------------------------------------------------------
-    Precision                   |           0.938            |           0.766             |    0.741
+    Precision                   |         1.000         |         0.900        |       0.950     |       0.95
     ------------------------------------------------------------------------------------------------------------------
-    Recall                      |           0.625            |           0.750             |    0.645
+    Recall                      |         0.583         |         0.750        |       0.613     |       0,649
     ------------------------------------------------------------------------------------------------------------------
-    IoU promedio                |           29.3%            |           34.0%             |    19.3%
+    F1                          |         0.737         |         0.818        |       0.745     |       0,767
+    ------------------------------------------------------------------------------------------------------------------
+    IoU promedio                |         33.2%         |         34.7%        |       24.5%     |       30,8%
     ------------------------------------------------------------------------------------------------------------------
 
-    El programa presenta buena precisión y un recall aceptable, sin embargo, el IoU promedio es bajo. Esto es
-    atribuible a la existencia de una gran cantidad de duplicados, dada la rigurosidad con la que se está tratando
-    la continuidad de los frames de un mismo comercial.
+    El programa presenta valores de precisión considerablemente altos: casi todas las detecciones que encuentra son
+    verdaderas, dando origen a una precisión promedio de 0,95. Sin embargo, el programa presenta dificultad para
+    identificar la totalidad de los comerciales, lo que se refleja en un Recall promedio de 0,649. Por su parte, el
+    F1-Score promedio para los tres datasets evaluados es de 0,767.
+
+    En general consideramos el resultado como bueno, en cuanto creemos que un posible uso que el programa podría tener
+    sería el de identificar comerciales para luego borrarlos del video de televisión, a fin de poder ver los capítulos
+    sin interrupciones. Si bien no hay duda de que la permanencia de algunos comerciales sería molesto, el problema sería
+    aún mayor si un fragmento de televisión es detectado como comercial y por ende eliminado. Pero esto último casi no
+    sucedería con nuestro programa, pues la incidencia de falsos positivos es prácticamente nula.
 
     5.2. Tiempo de ejecución
 
@@ -189,15 +216,16 @@ para el módulo siguiente.
 
     Se observa que el proceso más lento es el de tarea2-busqueda.py. Esto no es de extrañar: en la búsqueda de
     similitudes se compara cada descriptor de frame de video de televisión con cada uno de los descriptores de
-    frame de comerciales, lo que constituye una operación O(mn) con m el número de frames del canal de televisión
-    dividido en el tiempo de muestreo, y n lo mismo para los comerciales.  Es de esperar que m sea mucho más grande
-    que n, y según el largo de la emisión de televisión, los tiempos de procesamiento escalarán rápidamente.
+    frame de comerciales, lo que constituye una operación de orden O(mn) con m el número de frames del canal de
+    televisión dividido en el tiempo de muestreo, y n lo mismo para los comerciales.  Es de esperar que m sea
+    mucho más grande que n, por lo cual podemos afirmar que  según el largo de la emisión de televisión, los tiempos
+    de procesamiento escalarán rápidamente.
 
     En caso de requerir trabajar con emisiones más largas, se recomienda buscar nuevos parámetros para 'segs' y
     'tamaño'. Atención: este proceso puede requerir de una gran cantidad de iteraciones antes de obtener buenos
-    resultados, y cada iteración a su vez requerirá de una cantidad considerable de tiempo. Se recomienda seguir los
-    siguientes lineamientos para ahorrar tiempo:
-    - Priorizar reducir 'tamaño'. Valor mínimo para resultados aceptables: 30.
+    resultados, y cada iteración a su vez requerirá de una cantidad considerable de tiempo. En este sentido, se
+    recomienda seguir los siguientes lineamientos para encontrar buenos parámetros en un tiempo óptimo:
+    - Priorizar reducir 'tamaño'. Valor mínimo para resultados aceptables: 25.
     - Si aún no es suficiente, aumentar 'segs'. Valor máximo: la duración del comercial más corto / 2.
 
 6. FUENTES
