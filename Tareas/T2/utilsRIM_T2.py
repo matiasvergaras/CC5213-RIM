@@ -7,12 +7,12 @@ import cv2
 def distancia_manhattan(a, b):
     return np.abs(a - b).sum()
 
-# proporcionFrames: int string -> flot
-# Recibe la cantidad de frames encontrados, el nombre del directorio donde buscar descriptores_comerciales
-# y entrega un numero entre 0 y 1 representando la magnitud n_frames_encontrados / n_frames_totales_del_comercial
-def proporcionFrames(n_frames, comercial, path):
-    frames_totales = 0
-    with open(path+"descriptores_comerciales/numero_frames", 'r') as info_comerciales:
+# proporcionDescr: int string -> flot
+# Recibe la cantidad de descriptores encontrados, el nombre del directorio donde buscar n_descr
+# y entrega un numero entre 0 y 1 representando la magnitud n_descr_encontrados / n_descr_totales
+def proporcionDescr(n_descr, comercial, path):
+    descr_totales = 0
+    with open("descriptores_comerciales/n_descr", 'r') as info_comerciales:
         # Leer archivo como objeto iterable, separando por saltos de linea
         iter_comerciales = info_comerciales.read().split('\n')
         for linea in iter_comerciales:
@@ -20,7 +20,7 @@ def proporcionFrames(n_frames, comercial, path):
                 arr_linea = linea.split('\t')
                 frames_totales = int(arr_linea[1])
                 break
-        return n_frames/frames_totales
+        return round(n_frames/frames_totales,2)
 
 # canny_automatizado: image int double -> image
 # Aplica el detector de bordes Canny a la imagen entregada, redimensionada a 'tamaño' x 'tamaño',
